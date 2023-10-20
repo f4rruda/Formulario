@@ -1,0 +1,181 @@
+import tkinter as tk
+from tkinter import ttk
+import openpyxl
+import os
+
+# Função para adicionar uma entrada manualmente
+def adicionar_entrada(campo_entries, i):
+    if i < 5:
+        campo_entries[i].grid(row=3 + i, column=1, padx=10, pady=5)
+        campo_entries[i].delete(0, tk.END)  # Limpa o campo
+        campo_entries[i].config(state=tk.NORMAL)  # Torna o campo de entrada editável
+
+# Função para limpar os campos
+def limpar_dados():
+    for campo in todos_campos:
+        campo.delete(0, tk.END)
+
+# Função para habilitar os campos de entrada
+def habilitar_campos():
+    for campo in todos_campos:
+        campo.config(state=tk.NORMAL)
+
+# Função para desabilitar os campos de entrada
+def desabilitar_campos():
+    for campo in todos_campos:
+        campo.delete(0, tk.END)
+        campo.config(state=tk.DISABLED)
+
+# Função para salvar os dados do formulário
+def salvar_dados():
+    chapa = chapa_entry.get()
+    nome = nome_entry.get()
+    ies_vinculo = ies_vinculo_entry.get()
+    ies = ies_entry.get()
+    campus = campus_entry.get()
+    hub = hub_entry.get()
+    turno = turno_entry.get()
+
+    graduacao = [graduacao_entries[i].get() for i in range(len(graduacao_entries)) if graduacao_entries[i].get()]
+    especializacao = [especializacao_entries[i].get() for i in range(len(especializacao_entries)) if especializacao_entries[i].get()]
+    mestrado = [mestrado_entries[i].get() for i in range(len(mestrado_entries)) if mestrado_entries[i].get()]
+    doutorado = [doutorado_entries[i].get() for i in range(len(doutorado_entries)) if doutorado_entries[i].get()] 
+
+    # Verifica se o arquivo existe, caso contrário, cria um novo
+    if not os.path.exists("base_de_cadastro.xlsx"):
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        # Adicione cabeçalhos às colunas
+        sheet.append(["Chapa", "Nome", "IES de vínculo", "IES", "Campus", "HUB", "Turno", "Graduação", "Especialização", "Mestrado", "Doutorado"])
+    else:
+        # Cria ou abre o arquivo de planilha existente
+        workbook = openpyxl.load_workbook("base_de_cadastro.xlsx")
+
+    # Abre a primeira planilha
+    sheet = workbook.active
+
+    # Obtém a última linha usada na planilha
+    last_row = sheet.max_row
+
+    # Adiciona os dados preenchidos à planilha
+    sheet.cell(row=last_row + 1, column=1, value=chapa)
+    sheet.cell(row=last_row + 1, column=2, value=nome)
+    sheet.cell(row=last_row + 1, column=3, value=ies_vinculo)
+    sheet.cell(row=last_row + 1, column=4, value=ies)
+    sheet.cell(row=last_row + 1, column=5, value=campus)
+    sheet.cell(row=last_row + 1, column=6, value=hub)
+    sheet.cell(row=last_row + 1, column=7, value=turno)
+    sheet.cell(row=last_row + 1, column=8, value="; ".join(graduacao))
+    sheet.cell(row=last_row + 1, column=9, value="; ".join(especializacao))
+    sheet.cell(row=last_row + 1, column=10, value="; ".join(mestrado))
+    sheet.cell(row=last_row + 1, column=11, value="; ".join(doutorado))
+
+    # Salva as alterações na planilha
+    workbook.save("base_de_cadastro.xlsx")
+
+    # Limpa os campos
+    limpar_dados()
+
+    # Exibe a mensagem de "Cadastro efetuado"
+    mensagem_label.config(text="Cadastro efetuado")
+
+# Função para atualizar as opções do campo de turno
+def atualizar_turno(event):
+    dia_selecionado = dias_da_semana_entry.get()
+    if dia_selecionado == "SAB":
+        turno_entry["values"] = ["Manhã", "Tarde"]
+    else:
+        turno_entry["values"] = ["Manhã", "Tarde", "Noite"]
+
+# Cria uma janela
+janela = tk.Tk()
+janela.title("Formulário")
+janela.geometry("600x500")  # Define o tamanho da janela
+
+
+# Crie uma função para simplificar a criação de rótulos e entradas
+def criar_rotulo_entrada(texto, linha):
+    rotulo = tk.Label(janela, text=texto)
+    entrada = tk.Entry(janela, width=40)
+    rotulo.grid(row=linha, column=0, padx=10, pady=5)
+    entrada.grid(row=linha, column=1, padx=10, pady=5)
+    return entrada
+
+# Rótulos e campos de entrada
+chapa_entry = criar_rotulo_entrada("Chapa", 0)
+nome_entry = criar_rotulo_entrada("Nome Completo", 1)
+ies_vinculo_entry = criar_rotulo_entrada("IES de vínculo", 2)
+ies_entry = criar_rotulo_entrada("IES", 7)
+campus_entry = criar_rotulo_entrada("Campus", 8)
+hub_entry = criar_rotulo_entrada("HUB", 9)
+
+# Caixas de seleção suspensa (Combobox)
+dias_da_semana = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB"]
+dias_da_semana_label = tk.Label(janela, text="Dias da semana")
+dias_da_semana_label.grid(row=10, column=0, padx=10, pady=5)
+dias_da_semana_entry = ttk.Combobox(janela, values=dias_da_semana)
+dias_da_semana_entry.set("SEG")
+dias_da_semana_entry.config(state="readonly")
+dias_da_semana_entry.grid(row=10, column=1, padx=10, pady=5)
+
+# Campo de entrada para o turno
+turno_label = tk.Label(janela, text="Turno")
+turno_label.grid(row=11, column=0, padx=10, pady=5)
+turno_entry = ttk.Combobox(janela, values=["Manhã", "Tarde", "Noite"])
+turno_entry.grid(row=11, column=1, padx=10, pady=5)
+
+# Caixas de seleção suspensa (Combobox)
+graduacao_entries = [criar_rotulo_entrada("Graduação", 3)]
+especializacao_entries = [criar_rotulo_entrada("Especialização", 4)]
+mestrado_entries = [criar_rotulo_entrada("Mestrado", 5)]
+doutorado_entries = [criar_rotulo_entrada("Doutorado", 6)]
+
+# Botões para adicionar entradas
+add_graduacao_button = tk.Button(janela, text="+", command=lambda: adicionar_entrada(graduacao_entries, 0))
+add_especializacao_button = tk.Button(janela, text="+", command=lambda: adicionar_entrada(especializacao_entries, 0))
+add_mestrado_button = tk.Button(janela, text="+", command=lambda: adicionar_entrada(mestrado_entries, 0))
+add_doutorado_button = tk.Button(janela, text="+", command=lambda: adicionar_entrada(doutorado_entries, 0))
+
+# Botão para habilitar campos
+habilitar_campos_button = tk.Button(janela, text="Novo Cadastro", command=habilitar_campos)
+
+# Botão para limpar os campos
+limpar_dados_button = tk.Button(janela, text="Limpar Dados", command=limpar_dados)
+
+# Botão para salvar os dados
+salvar_button = tk.Button(janela, text="Salvar", command=salvar_dados)
+
+# Label para mensagem de "Cadastro efetuado"
+mensagem_label = tk.Label(janela, text="", fg="green")
+mensagem_label.grid(row=13, column=0, columnspan=3, padx=10, pady=10)
+
+# Lista de todos os campos de entrada para controle
+todos_campos = [
+    chapa_entry,
+    nome_entry,
+    ies_vinculo_entry,
+    ies_entry,
+    campus_entry,
+    hub_entry,
+    turno_entry,
+]
+
+for campo in graduacao_entries + especializacao_entries + mestrado_entries + doutorado_entries:
+    todos_campos.append(campo)
+
+# Desabilita os campos de entrada inicialmente
+desabilitar_campos()
+
+# Atualiza as opções do campo de turno quando o dia da semana é alterado
+dias_da_semana_entry.bind("<<ComboboxSelected>>", atualizar_turno)
+
+# Posicionamento dos botões
+add_graduacao_button.grid(row=3, column=2, padx=10, pady=5)
+add_especializacao_button.grid(row=4, column=2, padx=10, pady=5)
+add_mestrado_button.grid(row=5, column=2, padx=10, pady=5)
+add_doutorado_button.grid(row=6, column=2, padx=10, pady=5)
+habilitar_campos_button.grid(row=12, column=0, padx=10, pady=10)
+limpar_dados_button.grid(row=12, column=1, padx=10, pady=10)
+salvar_button.grid(row=12, column=2, padx=10, pady=10)
+
+janela.mainloop()
